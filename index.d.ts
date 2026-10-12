@@ -1,0 +1,170 @@
+// Copyright 2026 Quantova Inc
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
+export type RecordType = 'appropriation' | 'allotment' | 'commitment' | 'receipt' | 'invoice' | 'payment';
+export type Role = 'ministry' | 'budget' | 'officer' | 'receiver' | 'intake' | 'treasury';
+
+export interface Envelope {
+  format: 'qspend/1';
+  type: RecordType;
+  algorithm: 'ML-DSA-65';
+  signer: { id: string; publicKey: string };
+  statement: Record<string, unknown>;
+  signature: string;
+  anchor?: unknown;
+}
+
+export interface KeyDescription {
+  format: 'qspend-key/1';
+  algorithm: 'ML-DSA-65';
+  id: string;
+  publicKey: string;
+}
+
+export type KeyRef = string | Uint8Array | KeyDescription;
+
+export interface AppropriationOptions {
+  key: Uint8Array;
+  budgetRef: string;
+  line: string;
+  period: string;
+  currency: string;
+  amount: string;
+  approvedAt?: string;
+  note?: string;
+}
+
+export interface AllotmentOptions {
+  key: Uint8Array;
+  appropriation: Envelope;
+  unit: string;
+  currency?: string;
+  amount: string;
+  previous?: Envelope;
+  first?: boolean;
+  allottedAt?: string;
+  note?: string;
+}
+
+export interface CommitmentOptions {
+  key: Uint8Array;
+  allotment: Envelope;
+  supplierRef: string;
+  documentDigest?: string;
+  document?: Uint8Array;
+  currency?: string;
+  amount: string;
+  previous?: Envelope;
+  first?: boolean;
+  committedAt?: string;
+  note?: string;
+}
+
+export interface ReceiptOptions {
+  key: Uint8Array;
+  commitment: Envelope;
+  documentDigest?: string;
+  document?: Uint8Array;
+  receivedAt?: string;
+  note?: string;
+}
+
+export interface InvoiceOptions {
+  key: Uint8Array;
+  commitment: Envelope;
+  receipt: Envelope;
+  invoiceNumber: string;
+  invoiceDigest?: string;
+  document?: Uint8Array;
+  currency?: string;
+  amount: string;
+  receivedAt?: string;
+  note?: string;
+}
+
+export interface PaymentOptions {
+  key: Uint8Array;
+  commitment: Envelope;
+  invoice: Envelope;
+  currency?: string;
+  amount?: string;
+  previous?: Envelope;
+  first?: boolean;
+  paidAt?: string;
+  note?: string;
+}
+
+export interface VerifyOptions {
+  type: RecordType;
+  ministryKeys?: KeyRef[];
+  budgetKeys?: KeyRef[];
+  officerKeys?: KeyRef[];
+  receiverKeys?: KeyRef[];
+  intakeKeys?: KeyRef[];
+  treasuryKeys?: KeyRef[];
+  records?: Envelope[];
+  allSupplied?: boolean;
+  party?: { field: string; identity: string; salt: Uint8Array };
+  documentDigest?: string;
+  document?: Uint8Array;
+  invoiceDigest?: string;
+  requireAnchor?: boolean;
+  at?: string;
+  maxAnchorDelay?: number;
+  rpc?: string;
+  client?: unknown;
+  clients?: Array<string | unknown>;
+  contract?: string;
+  trustCustomContract?: boolean;
+}
+
+export interface VerifyCheck {
+  name: string;
+  ok: boolean;
+  detail: string;
+  transport: boolean;
+  indeterminate: boolean;
+}
+
+export interface VerifyResult {
+  valid: boolean;
+  status: 'valid' | 'invalid' | 'indeterminate';
+  type: RecordType | null;
+  checks: VerifyCheck[];
+  [field: string]: unknown;
+}
+
+export interface AnchorOptions {
+  seed: Uint8Array;
+  index: number;
+  network?: 'testnet';
+  rpc?: string;
+  client?: unknown;
+  meter?: number;
+  maxFee?: string | number;
+  timeoutMs?: number;
+  onPending?: (pending: unknown) => void | Promise<void>;
+}
+
+export function generateKey(): Uint8Array;
+export function publicKey(key: Uint8Array): Uint8Array;
+export function keyId(key: Uint8Array): string;
+export function describeKey(key: Uint8Array): KeyDescription;
+export function commitParty(identity: string): { salt: Uint8Array; ref: string };
+export function appropriation(options: AppropriationOptions): Envelope;
+export function allotment(options: AllotmentOptions): Envelope;
+export function commitment(options: CommitmentOptions): Envelope;
+export function receipt(options: ReceiptOptions): Envelope;
+export function invoice(options: InvoiceOptions): Envelope;
+export function payment(options: PaymentOptions): Envelope;
+export function create(type: RecordType, options: Record<string, unknown>): Envelope;
+export function anchor(envelopes: Envelope | Envelope[], options: AnchorOptions): Promise<Envelope[]>;
+export function complete(envelopes: Envelope | Envelope[], pending: unknown, options?: { rpc?: string; client?: unknown; timeoutMs?: number }): Promise<Envelope[]>;
+export function verify(envelope: unknown, options: VerifyOptions): Promise<VerifyResult>;
+export function refOf(envelope: Envelope): string;
+export function anchorDigest(envelope: Envelope): string;
+export const FORMAT: 'qspend/1';
+export const ALGORITHM: 'ML-DSA-65';
+export const KIND: 1102;
+export const TYPES: readonly RecordType[];
+export const ROLES: readonly Role[];
