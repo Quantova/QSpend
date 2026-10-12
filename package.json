@@ -1,0 +1,61 @@
+{
+  "name": "@quantovainc/qspend",
+  "version": "0.1.0",
+  "description": "Post quantum public spending integrity for governments. Seals appropriations, allotments, commitments, receipts, invoices and payments with ML-DSA-65 under FIPS 204 and Quantova time proofs, so a payment without authority, above its commitment or made twice is detected.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "qspend": "bin/qspend.js"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib/",
+    "bin/",
+    "wasm/qspend_native.js",
+    "wasm/qspend_native_bg.wasm",
+    "wasm/qspend_native.d.ts",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+    "NOTICE",
+    "AUTHORS"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@quantovainc/qstamp": "0.1.5"
+  },
+  "keywords": [
+    "post-quantum",
+    "quantum-safe",
+    "public-finance",
+    "budget",
+    "treasury",
+    "anti-corruption",
+    "government",
+    "ml-dsa",
+    "fips-204",
+    "quantova"
+  ],
+  "license": "Apache-2.0 OR MIT",
+  "author": "Quantova Inc",
+  "homepage": "https://github.com/Quantova/QSpend",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Quantova/QSpend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Quantova/QSpend/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
