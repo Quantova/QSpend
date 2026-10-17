@@ -17,7 +17,7 @@ QSpend is standalone. It runs on the systems of the government, holds keys local
 1. A record altered, replaced, inserted or backdated after it was sealed.
 2. Allotments that together exceed their appropriation, commitments that together exceed their allotment, and payments that together exceed their commitment.
 3. An invoice above its commitment, or an invoice whose confirmation of receipt belongs to another commitment.
-4. A payment that differs from its invoice in amount or currency, or a payment repeated against the same invoice.
+4. A payment that differs from its invoice in amount or currency, a payment repeated against the same invoice, or a payment of a second invoice record that carries the same invoice number in the same commitment.
 5. A record signed by a key that is not trusted for its role, or two linked records signed by the same key.
 6. A record dated before the record it relies on.
 7. Two different records in the same position of a series, once the records held for the series are supplied.
