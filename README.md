@@ -95,7 +95,7 @@ A result is valid only when the trusted keys are given, every record relied on i
 
 ## Trust model of this release
 
-This release anchors on the live Quantova network Q-test-net-1. The signing module is compiled from the Quantova Q-Crypto library, which follows FIPS 204 and FIPS 202 and has been tested against the NIST vectors. It has not been validated under FIPS 140-3. Anchor times are confirmed by the endpoints a verifier queries, so a time is only as reliable as those endpoints. Verification names the endpoints it consulted and says whether they are the official endpoints of the network, and a verifier who needs independence from any single operator should query several independent endpoints.
+This release anchors on the live Quantova network Q-test-net-1. The signing module is compiled from the Quantova Q-Crypto library, which follows FIPS 204 and FIPS 202 and has been tested against the NIST vectors. It has not been validated under FIPS 140-3. Anchor times are confirmed by the endpoints a verifier queries and are accepted only when at least two endpoints run by different operators agree. Verification names the endpoints it consulted and says whether they are the official endpoints of the network, and a verifier who needs independence from any single operator should query several independent endpoints.
 
 A sealed record proves who signed it, what was signed and when it was anchored. Each check is made from the records a verifier is given, so two records in the same position of a series are detected only when both are supplied, and auditors should obtain every record the government holds for the series they examine. A supplier commitment is the same in every record that uses the same salt, so records about one supplier can be linked by anyone who sees them, and anyone who obtains the salt can test guesses of the identifier, so salts must be protected like the identifiers themselves. Verifiers must keep the keys of retired officials in the trusted lists for as long as records they signed are verified. Payments are limited by their commitment, but two invoices may cite the same confirmation of receipt and two appropriations may be sealed for the same budget line, so the invoice intake and the finance ministry must prevent duplicates within their own procedures. A sealed record does not prove that a purchase represented value for money or that a payment was lawful, which remains the work of auditors and courts, and it does not detect spending that was never recorded.
 
@@ -151,7 +151,7 @@ The command exits with status 0 when the result is valid, 1 when it is invalid, 
 
 ## Network
 
-The live Quantova network is named Q-test-net-1 with genesis hash ca91e093bb8de33e90db52d7c89876597d14760703793ea7211929e73e613062. Anchors are recorded by the official Qstamp contract on that network. The public endpoint is https://rpc-testnet.quantova.org.
+The live Quantova network is named Q-test-net-1 with genesis hash ca91e093bb8de33e90db52d7c89876597d14760703793ea7211929e73e613062. Anchors are recorded by the official Qstamp contract on that network. The public endpoint is https://rpc-testnet.quantova.org. Chain data is accepted only when at least two endpoints run by different operators agree. Give them with the rpc or clients option, or with --rpc once for each on the command line. The option trustSingleEndpoint, or --trust-single-endpoint, relies on one endpoint, which can then invent an anchor alone.
 
 ## Licence
 
