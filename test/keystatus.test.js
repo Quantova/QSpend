@@ -12,7 +12,7 @@ const iso = (ms) => new Date(ms).toISOString();
 test('a revoked key backdating an unanchored record never verifies valid', async () => {
   const stolen = q.generateKey();
   const now = Date.now();
-  const app = q.appropriation({ key: stolen, budgetRef: 'B-2026', line: 'L1', period: '2026', currency: 'EUR', amount: '999999999', approvedAt: iso(now - 2 * 86400e3) });
+  const app = q.appropriation({ key: stolen, budgetRef: 'B-2026', line: 'L1', period: '2026', currency: 'EUR', amount: '999999999', validUntil: iso(now + 86400e3), approvedAt: iso(now - 2 * 86400e3) });
   const r = await q.verify(app, {
     type: 'appropriation', ministryKeys: [q.describeKey(stolen)], requireAnchor: false, at: iso(now),
     keyStatus: async () => ({ revoked: true, revokedAt: Math.floor((now - 3600e3) / 1000) }),
@@ -25,7 +25,7 @@ test('a revoked key anywhere in the chain of authority makes the dependent recor
   const ministry = q.generateKey();
   const budget = q.generateKey();
   const now = Date.now();
-  const app = q.appropriation({ key: ministry, budgetRef: 'B', line: 'L', period: '2026', currency: 'EUR', amount: '900000000', approvedAt: iso(now - 3600e3) });
+  const app = q.appropriation({ key: ministry, budgetRef: 'B', line: 'L', period: '2026', currency: 'EUR', amount: '900000000', validUntil: iso(now + 86400e3), approvedAt: iso(now - 3600e3) });
   const allot = q.allotment({ key: budget, appropriation: app, unit: 'works', amount: '900000000', first: true, allottedAt: iso(now - 1800e3) });
   const ministryId = q.keyId(ministry);
   let calls = 0;

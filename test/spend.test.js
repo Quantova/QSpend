@@ -15,10 +15,9 @@ async function ledger() {
   const K = {};
   for (const r of ['ministry', 'budget', 'officer', 'receiver', 'intake', 'treasury']) K[r] = q.generateKey();
   const t0 = now - 80000;
-  const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'B1', line: 'roads', period: '2026', currency: 'EUR', amount: '1000000', approvedAt: iso(t0) }), t0 + 5);
+  const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'B1', line: 'roads', period: '2026', currency: 'EUR', amount: '1000000', validUntil: iso(now + 30 * 86400), approvedAt: iso(t0) }), t0 + 5);
   const allot = await at(q.allotment({ key: K.budget, appropriation: app, unit: 'works', amount: '1000000', first: true, allottedAt: iso(t0 + 10) }), t0 + 15);
   const secret = new Uint8Array(32).fill(4);
-  const supplier = (name) => q.commitParty(name, { secret, scope: q.refOf(app) }).ref;
   let n = 0;
   const next = () => {
     n += 10;
@@ -26,7 +25,7 @@ async function ledger() {
   };
   const commitment = async (name, previous) => {
     const t = next();
-    return at(q.commitment(Object.assign({ key: K.officer, allotment: allot, supplierRef: supplier(name), document: Buffer.from('po ' + t), amount: '50000', committedAt: iso(t) }, previous ? { previous } : { first: true })), t + 1);
+    return at(q.commitment(Object.assign({ key: K.officer, allotment: allot, supplier: name, partySecret: secret, document: Buffer.from('po ' + t), amount: '50000', committedAt: iso(t) }, previous ? { previous } : { first: true })), t + 1);
   };
   const receipt = async (c) => {
     const t = next();
@@ -92,7 +91,7 @@ test('the same invoice document cannot be paid under two commitments of differen
   assert.strictEqual(r.status, 'invalid', failing(r).join('\n'));
 });
 
-test('equal invoice numbers of different suppliers are paid normally', async () => {
+test('equal invoice numbers of different suppliers leave the single payment of the invoice open for review', async () => {
   const l = await ledger();
   const cA = await l.commitment('ACME BV');
   const cB = await l.commitment('Other Ltd', cA);
@@ -103,5 +102,9 @@ test('equal invoice numbers of different suppliers are paid normally', async () 
   const p1 = await l.payment(cA, i1);
   const p2 = await l.payment(cB, i2);
   const r = await l.check(p2, [cA, cB, recA, recB, i1, i2, p1]);
-  assert.strictEqual(r.status, 'valid', failing(r).join('\n'));
+  assert.strictEqual(r.status, 'indeterminate', failing(r).join('\n'));
+  const once = r.checks.find((c) => c.name === 'invoice paid once');
+  assert.ok(once && !once.ok && once.indeterminate);
+  const alone = await l.check(p2, [cA, cB, recA, recB, i1, i2]);
+  assert.strictEqual(alone.status, 'valid', failing(alone).join('\n'));
 });
