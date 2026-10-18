@@ -14,6 +14,8 @@ const api = {
   describeKey: C.describeKey,
   commitParty: C.commitParty,
   create: C.create,
+  folderLedger: C.folderLedger,
+  ledgerLatest: C.ledgerLatest,
   anchor: C.anchor,
   complete: C.complete,
   verify,
