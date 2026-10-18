@@ -153,26 +153,60 @@ test('the folder ledger never follows a symbolic link and refuses an entry filed
   t.diagnostic('symbolic links checked ' + (process.platform !== 'win32'));
 });
 
-test('the folder ledger finds the latest record of a series by its name without listing the folder', async () => {
+test('the folder ledger reads the latest record of a series by its name without listing the folder', async () => {
   const { type, base, scope } = await seriesBase();
   const NAME = F.NAME + '.' + type + '.' + scope;
   const dir = folder();
   for (let i = 0; i < 300; i += 1) fs.writeFileSync(path.join(dir, F.NAME + '.' + type + '.' + crypto.randomBytes(32).toString('hex') + '.1.json'), '');
   const store = q.folderLedger(dir);
   const list = fs.readdirSync;
-  fs.readdirSync = () => {
-    throw new Error('the folder was listed');
-  };
-  try {
-    let prev = null;
-    for (let seq = 1; seq <= 19; seq += 1) {
-      const env = forge(base, seq);
-      assert.strictEqual(await store.compareAndSwap(NAME, prev, state(NAME, seq, env)), true);
-      prev = state(NAME, seq, env);
-      assert.strictEqual(await store.read(NAME), prev);
-      assert.deepStrictEqual(await q.ledgerLatest(dir, type, scope), env);
+  const unlisted = async (fn) => {
+    fs.readdirSync = () => {
+      throw new Error('the folder was listed');
+    };
+    try {
+      return await fn();
+    } finally {
+      fs.readdirSync = list;
     }
-  } finally {
-    fs.readdirSync = list;
+  };
+  let prev = null;
+  for (let seq = 1; seq <= 19; seq += 1) {
+    const env = forge(base, seq);
+    assert.strictEqual(await store.compareAndSwap(NAME, prev, state(NAME, seq, env)), true);
+    prev = state(NAME, seq, env);
+    assert.strictEqual(await unlisted(() => store.read(NAME)), prev);
+    assert.deepStrictEqual(await unlisted(() => q.ledgerLatest(dir, type, scope)), env);
   }
+});
+
+test('a series missing a record below its latest one is refused as damaged, so no position is signed twice', async () => {
+  const { type, base, scope } = await seriesBase();
+  const NAME = F.NAME + '.' + type + '.' + scope;
+  for (const lost of [1, 2, 4]) {
+    const dir = folder();
+    const store = q.folderLedger(dir);
+    const chain = [null];
+    for (let n = 1; n <= 5; n++) {
+      chain[n] = forge(base, n);
+      assert.strictEqual(await store.compareAndSwap(NAME, n === 1 ? null : state(NAME, n - 1, chain[n - 1]), state(NAME, n, chain[n])), true);
+    }
+    fs.rmSync(path.join(dir, NAME + '.' + lost + '.json'));
+    const seen = await store.read(NAME);
+    const at = seen === null ? 0 : JSON.parse(seen).seq;
+    if (at === 5) continue;
+    const before = fs.readdirSync(dir).length;
+    await assert.rejects(store.compareAndSwap(NAME, seen, state(NAME, at + 1, forge(base, at + 1))), (e) => e.code === LEDGER && /missing a record/.test(e.message));
+    assert.strictEqual(fs.readdirSync(dir).length, before);
+  }
+  const dir = folder();
+  const store = q.folderLedger(dir);
+  const chain = [null];
+  for (let n = 1; n <= 5; n++) {
+    chain[n] = forge(base, n);
+    await store.compareAndSwap(NAME, n === 1 ? null : state(NAME, n - 1, chain[n - 1]), state(NAME, n, chain[n]));
+  }
+  fs.rmSync(path.join(dir, NAME + '.3.json'));
+  assert.strictEqual(await store.read(NAME), state(NAME, 5, chain[5]));
+  assert.strictEqual(await store.compareAndSwap(NAME, state(NAME, 5, chain[5]), state(NAME, 6, forge(base, 6))), true);
 });

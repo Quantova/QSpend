@@ -146,7 +146,7 @@ The file account.key holds the 32 byte seed of a funded Quantova account, as 64 
 
 The network has one official endpoint today, so the anchor and verify commands above are given --trust-single-endpoint to rely on it. Without that flag they stop, because chain data is accepted only when endpoints of two different operators agree. With it a verification reports INDETERMINATE and exits with status 2, because an anchor confirmed by one operator is unproven. Once the Qstamp release lists official endpoints of two different operators the flag is no longer needed.
 
-Every command that signs a record of a series takes --ledger with the folder shared by every signer of the series, as in the example above. Without --ledger it signs nothing and exits with status 64, unless --no-ledger declares that the integrating system serialises the series itself.
+Every command that signs a record of a series takes --ledger with the folder shared by every signer of the series, as in the example above. The ledger folder records every position already signed, so keep it on storage that only the signing service can write to, never edit or delete a file in it, and back it up as a whole, because a folder that is rolled back or loses a file lets a position be signed a second time. Without --ledger it signs nothing and exits with status 64, unless --no-ledger declares that the integrating system serialises the series itself.
 
 If anchoring is interrupted after its transaction may have been sent, a pending stamp is kept beside each envelope and the envelopes are not anchored again. Finish with qspend complete, giving the same envelopes in the same order and the pending stamp.
 
