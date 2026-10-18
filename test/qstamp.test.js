@@ -13,12 +13,13 @@ const { spawnSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const OLD = /the installed Qstamp is older than 0\.3\.0 and cannot prove anchors/;
 
-function stub(version, proven, finality) {
+function stub(version, proven, finality, deadline) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qstamp-stub-'));
   fs.mkdirSync(path.join(dir, 'lib'));
   fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: '@quantovainc/qstamp', version, main: 'index.js' }));
   fs.writeFileSync(path.join(dir, 'index.js'), proven ? 'module.exports = { isProven: () => false };\n' : 'module.exports = {};\n');
   if (finality) fs.writeFileSync(path.join(dir, 'lib', 'finality.js'), '\n');
+  if (deadline) fs.writeFileSync(path.join(dir, 'lib', 'deadline.js'), '\n');
   return dir;
 }
 
@@ -57,4 +58,25 @@ test('the package refuses to load against a Qstamp that cannot prove anchors', (
 
   const current = loadWith(stub('0.3.0', true, false));
   assert.strictEqual(current.status, 0, current.stderr);
+});
+
+test('a staged Qstamp is accepted only when it carries both the finality and the deadline modules', () => {
+  const finalityOnly = loadWith(stub('0.2.1', true, true, false));
+  assert.notStrictEqual(finalityOnly.status, 0);
+  assert.match(finalityOnly.stderr, OLD);
+
+  const deadlineOnly = loadWith(stub('0.2.1', true, false, true));
+  assert.notStrictEqual(deadlineOnly.status, 0);
+  assert.match(deadlineOnly.stderr, OLD);
+
+  const unproven = loadWith(stub('0.2.1', false, true, true));
+  assert.notStrictEqual(unproven.status, 0);
+  assert.match(unproven.stderr, OLD);
+
+  const prerelease = loadWith(stub('0.3.0-rc.1', true, false, false));
+  assert.notStrictEqual(prerelease.status, 0);
+  assert.match(prerelease.stderr, OLD);
+
+  const staged = loadWith(stub('0.2.1', true, true, true));
+  assert.strictEqual(staged.status, 0, staged.stderr);
 });
