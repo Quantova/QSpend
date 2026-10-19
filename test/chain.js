@@ -115,8 +115,15 @@ async function simulatedProof(receipt, options) {
   });
 }
 
+const realIsProven = qstamp.isProven;
+
+function simulatedIsProven(r) {
+  return !!r && r.status === 'valid' && r.valid === true && r.proven === true && (r.trust === 'finality-proof' || r.trust === 'official-quorum');
+}
+
 function proofs(on) {
   qstamp.verify = on ? simulatedProof : realVerify;
+  qstamp.isProven = on ? simulatedIsProven : realIsProven;
 }
 
 function network(startTime) {

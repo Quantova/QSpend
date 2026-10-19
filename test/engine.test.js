@@ -39,7 +39,7 @@ test('the canonical form is stable when applied again', () => {
 });
 
 test('identifiers without letters or digits, or with invisible or unassigned characters, are refused', () => {
-  for (const bad of ['---', ' ', 'a‍b', 'a‮b', 'x\u{50000}', '', 42]) assert.throws(() => F.canonicalIdentifier(bad));
+  for (const bad of ['---', ' ', 'a\u200db', 'a\u202eb', 'x\u{50000}', '', 42]) assert.throws(() => F.canonicalIdentifier(bad));
 });
 
 test('party commitments use the canonical identifier', () => {
