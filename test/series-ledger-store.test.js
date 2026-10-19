@@ -244,7 +244,7 @@ test('a ledger folder with an access control list, or under a folder any user ca
   const listed = folder();
   const acl = process.platform === 'darwin'
     ? spawnSync('chmod', ['+a', 'everyone allow add_file,delete_child', listed])
-    : spawnSync('setfacl', ['-m', 'o::rwx', '-m', 'u:nobody:rwx', listed]);
+    : spawnSync('setfacl', ['-m', 'u:nobody:rwx', listed]);
   if (acl.status === 0) {
     await assert.rejects(q.folderLedger(listed).read(NAME), (e) => e.code === LEDGER && /access control list/.test(e.message));
   }
