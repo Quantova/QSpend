@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { spawnSync } = require('child_process');
 const test = require('node:test');
 const assert = require('node:assert');
 const q = require('..');
@@ -209,4 +210,81 @@ test('a series missing a record below its latest one is refused as damaged, so n
   fs.rmSync(path.join(dir, NAME + '.3.json'));
   assert.strictEqual(await store.read(NAME), state(NAME, 5, chain[5]));
   assert.strictEqual(await store.compareAndSwap(NAME, state(NAME, 5, chain[5]), state(NAME, 6, forge(base, 6))), true);
+});
+
+test('a ledger folder any user can write is refused, and a file past the largest position never blocks the series', async () => {
+  const { type, base, scope } = await seriesBase();
+  const NAME = F.NAME + '.' + type + '.' + scope;
+  const open = folder();
+  fs.chmodSync(open, 0o777);
+  await assert.rejects(q.folderLedger(open).read(NAME), (e) => e.code === LEDGER && /every user of this machine/.test(e.message));
+  const dir = folder();
+  const store = q.folderLedger(dir);
+  const one = forge(base, 1);
+  assert.strictEqual(await store.compareAndSwap(NAME, null, state(NAME, 1, one)), true);
+  fs.writeFileSync(path.join(dir, NAME + '.' + (F.SEQ_MAX + 1) + '.json'), 'stray');
+  assert.strictEqual(await store.compareAndSwap(NAME, state(NAME, 1, one), state(NAME, 2, forge(base, 2))), true);
+  fs.writeFileSync(path.join(dir, NAME + '.9.json'), 'stray');
+  await assert.rejects(store.read(NAME).then((t) => store.compareAndSwap(NAME, t, state(NAME, 3, forge(base, 3)))), (e) => e.code === LEDGER && new RegExp(NAME + '\\.9\\.json').test(e.message));
+});
+
+test('a ledger folder with an access control list, or under a folder any user can change, is refused', async () => {
+  const { type, scope } = await seriesBase();
+  const NAME = F.NAME + '.' + type + '.' + scope;
+  const open = folder();
+  fs.chmodSync(open, 0o777);
+  const inside = path.join(open, 'ledger');
+  fs.mkdirSync(inside, { mode: 0o700 });
+  await assert.rejects(q.folderLedger(inside).read(NAME), (e) => e.code === LEDGER && /above the ledger can be changed by another user/.test(e.message));
+  const sticky = folder();
+  fs.chmodSync(sticky, 0o1777);
+  const safe = path.join(sticky, 'ledger');
+  fs.mkdirSync(safe, { mode: 0o700 });
+  assert.strictEqual(await q.folderLedger(safe).read(NAME), null);
+  const listed = folder();
+  const acl = process.platform === 'darwin'
+    ? spawnSync('chmod', ['+a', 'everyone allow add_file,delete_child', listed])
+    : spawnSync('setfacl', ['-m', 'o::rwx', '-m', 'u:nobody:rwx', listed]);
+  if (acl.status === 0) {
+    await assert.rejects(q.folderLedger(listed).read(NAME), (e) => e.code === LEDGER && /access control list/.test(e.message));
+  }
+});
+
+test('a ledger reached through a symbolic link or a parent that another user can change, or a parent whose access list lets others write, is refused', async () => {
+  const { type, scope } = await seriesBase();
+  const NAME = F.NAME + '.' + type + '.' + scope;
+  const CODE = LEDGER;
+  const OPEN = (d) => q.folderLedger(d).read(NAME);
+
+  const parentAcl = folder();
+  const underAcl = path.join(parentAcl, 'ledger');
+  fs.mkdirSync(underAcl, { mode: 0o700 });
+  const set = process.platform === 'darwin' ? spawnSync('chmod', ['+a', 'everyone allow add_file,delete_child,add_subdirectory', parentAcl]) : spawnSync('setfacl', ['-m', 'u:nobody:rwx', parentAcl]);
+  if (set.status === 0) await assert.rejects(OPEN(underAcl), (e) => e.code === CODE && /can be changed by another user/.test(e.message));
+  const safeTarget = folder();
+  const openHolder = folder();
+  fs.chmodSync(openHolder, 0o777);
+  const linkInOpen = path.join(openHolder, 'ledger');
+  fs.symlinkSync(safeTarget, linkInOpen);
+  await assert.rejects(OPEN(linkInOpen), (e) => e.code === CODE && /can be changed by another user/.test(e.message));
+  const openTop = folder();
+  fs.chmodSync(openTop, 0o777);
+  const realUp = folder();
+  fs.mkdirSync(path.join(realUp, 'ledger'), { mode: 0o700 });
+  fs.symlinkSync(realUp, path.join(openTop, 'up'));
+  await assert.rejects(OPEN(path.join(openTop, 'up', 'ledger')), (e) => e.code === CODE && /can be changed by another user/.test(e.message));
+  const chainOwn = folder();
+  const chainOpen = folder();
+  fs.chmodSync(chainOpen, 0o777);
+  const chainTarget = folder();
+  fs.mkdirSync(path.join(chainTarget, 'ledger'), { mode: 0o700 });
+  fs.symlinkSync(chainTarget, path.join(chainOpen, 'L2'));
+  fs.symlinkSync(path.join(chainOpen, 'L2'), path.join(chainOwn, 'L1'));
+  await assert.rejects(OPEN(path.join(chainOwn, 'L1', 'ledger')), (e) => e.code === CODE && /can be changed by another user/.test(e.message));
+  const homeLike = folder();
+  if (process.platform === 'darwin') spawnSync('chmod', ['+a', 'everyone deny delete', homeLike]);
+  const denied = path.join(homeLike, 'ledger');
+  fs.mkdirSync(denied, { mode: 0o700 });
+  await OPEN(denied);
+  if (process.platform === 'darwin') spawnSync('chmod', ['-a', 'everyone deny delete', homeLike]);
 });

@@ -157,6 +157,30 @@ test('anchor lookups run at most four at a time', async () => {
   assert.ok(most >= 2 && most <= 4, 'at most ' + most + ' transactions were read at once');
 });
 
+test('setting the wall clock back does not stretch the time limit', async () => {
+  const { env, bare, base } = await anchoredRoot();
+  const forged = Array.from({ length: 6 }, (_, i) => receiptFor(bare, env.anchor.anchor.time - 10 - i, 1000 + i));
+  const clients = slowClients(base.clients, () => new Promise(() => {}));
+  const real = Date.now;
+  let calls = 0;
+  let timer;
+  const cap = new Promise((resolve) => { timer = setTimeout(() => resolve('still running'), 5000); });
+  Date.now = () => {
+    calls += 1;
+    return calls > 2 ? real() - 3600000 : real();
+  };
+  let r;
+  try {
+    r = await Promise.race([q.verify(env, Object.assign({}, base, { clients, deadlineMs: 300, records: copies(bare, forged) })), cap]);
+  } finally {
+    Date.now = real;
+    clearTimeout(timer);
+  }
+  assert.notStrictEqual(r, 'still running');
+  assert.strictEqual(r.status, 'indeterminate');
+  assert.ok(r.checks.some((c) => c.name === 'time limit' && !c.ok));
+});
+
 test('a verification that reaches its time limit is indeterminate and says so', async () => {
   const { env, bare, base } = await anchoredRoot();
   const forged = Array.from({ length: 6 }, (_, i) => receiptFor(bare, env.anchor.anchor.time - 10 - i, 1000 + i));
