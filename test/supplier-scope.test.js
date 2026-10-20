@@ -15,7 +15,7 @@ async function government() {
   const at = stamper(q, net);
   const K = {};
   for (const r of q.ROLES) K[r] = q.generateKey();
-  const secret = new Uint8Array(32).fill(6);
+  const secret = Uint8Array.from({ length: 32 }, (_, i) => (6 + i) & 255);
   const t0 = now - 80000;
   let n = 0;
   const next = () => {

@@ -4,6 +4,7 @@
 'use strict';
 
 const path = require('path');
+const { createRequire } = require('module');
 const crypto = require('crypto');
 
 const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
@@ -42,8 +43,8 @@ function bech32m(hrp, bytes) {
 
 const base = path.dirname(require.resolve('@quantovainc/qstamp'));
 const qstamp = require('@quantovainc/qstamp');
-const wire = require(path.join(base, 'lib', 'wire'));
-const { core } = require(require.resolve('@quantovainc/qcore', { paths: [base] }));
+const wire = createRequire(path.join(base, 'package.json'))('./lib/wire');
+const { core } = createRequire(path.join(base, 'package.json'))('@quantovainc/qcore');
 
 const SEED = new Uint8Array(32).fill(7);
 

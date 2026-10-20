@@ -19,7 +19,7 @@ test('a commitment may cite the procurement award, and verify checks it when the
   const w = await honest();
   const { q, K, all, roles, net } = w;
   const award = 'aa'.repeat(32);
-  const cited = await w.at(q.commitment({ key: K.officer, allotment: all.allotment, supplier: 'ACME BV', partySecret: new Uint8Array(32).fill(4), document: Buffer.from('po2'), awardRef: award, amount: '1000', previous: all.commitment, committedAt: iso(w.now - 120) }), w.now - 110);
+  const cited = await w.at(q.commitment({ key: K.officer, allotment: all.allotment, supplier: 'ACME BV', partySecret: Uint8Array.from({ length: 32 }, (_, i) => (4 + i) & 255), document: Buffer.from('po2'), awardRef: award, amount: '1000', previous: all.commitment, committedAt: iso(w.now - 120) }), w.now - 110);
   assert.strictEqual(cited.statement.awardRef, award);
   const check = (env, more) => {
     net.chain.block(w.now);
@@ -39,7 +39,7 @@ test('the award reference is checked on the commitment named by a receipt, an in
   const w = await honest();
   const { K, all, roles, net } = w;
   const award = 'aa'.repeat(32);
-  const cited = await w.at(q.commitment({ key: K.officer, allotment: all.allotment, supplier: 'ACME BV', partySecret: new Uint8Array(32).fill(4), document: Buffer.from('po2'), awardRef: award, amount: '1000', previous: all.commitment, committedAt: iso(w.now - 300) }), w.now - 290);
+  const cited = await w.at(q.commitment({ key: K.officer, allotment: all.allotment, supplier: 'ACME BV', partySecret: Uint8Array.from({ length: 32 }, (_, i) => (4 + i) & 255), document: Buffer.from('po2'), awardRef: award, amount: '1000', previous: all.commitment, committedAt: iso(w.now - 300) }), w.now - 290);
   const receipt = await w.at(q.receipt({ key: K.receiver, commitment: cited, document: Buffer.from('grn2'), receivedAt: iso(w.now - 280) }), w.now - 270);
   const invoice = await w.at(q.invoice({ key: K.intake, commitment: cited, receipt, invoiceNumber: 'INV-2002', document: Buffer.from('inv2'), amount: '1000', receivedAt: iso(w.now - 260) }), w.now - 250);
   const payment = await w.at(q.payment({ key: K.treasury, commitment: cited, invoice, first: true, paidAt: iso(w.now - 240) }), w.now - 230);

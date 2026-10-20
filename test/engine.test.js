@@ -4,6 +4,7 @@
 'use strict';
 
 const path = require('path');
+const { createRequire } = require('module');
 const test = require('node:test');
 const assert = require('node:assert');
 const q = require('..');
@@ -11,7 +12,7 @@ const F = require('../lib/format');
 const { network, stamper, proofs, iso, SEED } = require('./chain');
 
 const qstampBase = path.dirname(require.resolve('@quantovainc/qstamp'));
-const { core } = require(require.resolve('@quantovainc/qcore', { paths: [qstampBase] }));
+const { core } = createRequire(path.join(qstampBase, 'package.json'))('@quantovainc/qcore');
 
 const SAME = [
   ['NL-123456789', 'nl123456789', 'NL‑123456789', 'NL 123 456 789', 'ＮＬ１２３４５６７８９', 'NL.123.456.789', 'nl-I23456789', 'ΝL-123456789'],
@@ -43,8 +44,8 @@ test('identifiers without letters or digits, or with invisible or unassigned cha
 });
 
 test('party commitments use the canonical identifier', () => {
-  const salt = new Uint8Array(32).fill(5);
-  const secret = new Uint8Array(32).fill(6);
+  const salt = Uint8Array.from({ length: 32 }, (_, i) => (5 + i) & 255);
+  const secret = Uint8Array.from({ length: 32 }, (_, i) => (6 + i) & 255);
   const scope = 'ab'.repeat(32);
   const refs = new Set(SAME[0].map((x) => q.commitParty(x, { salt }).ref));
   assert.strictEqual(refs.size, 1);

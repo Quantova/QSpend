@@ -17,7 +17,7 @@ async function ledger() {
   const t0 = now - 80000;
   const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'B1', line: 'roads', period: '2026', currency: 'EUR', amount: '1000000', validUntil: iso(now + 30 * 86400), approvedAt: iso(t0) }), t0 + 5);
   const allot = await at(q.allotment({ key: K.budget, appropriation: app, unit: 'works', amount: '1000000', first: true, allottedAt: iso(t0 + 10) }), t0 + 15);
-  const secret = new Uint8Array(32).fill(4);
+  const secret = Uint8Array.from({ length: 32 }, (_, i) => (4 + i) & 255);
   let n = 0;
   const next = () => {
     n += 10;

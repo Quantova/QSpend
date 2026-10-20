@@ -31,7 +31,7 @@ async function books(rng) {
   const next = () => (t += 20);
   const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'B', line: 'L', period: '2026', currency: 'EUR', amount: '100000000', validUntil: iso(now + 86400), approvedAt: iso(next()) }), t + 1);
   const allot = await at(q.allotment({ key: K.budget, appropriation: app, unit: 'u', amount: '100000000', first: true, allottedAt: iso(next()) }), t + 1);
-  const secret = new Uint8Array(32).fill(1 + int(200));
+  const secret = Uint8Array.from({ length: 32 }, (_, i) => (1 + int(200) + i) & 255);
   const cap = 1000 + int(90000);
   const com = await at(q.commitment({ key: K.officer, allotment: allot, supplier: 'ACME BV', partySecret: secret, document: Buffer.from('po ' + cap), amount: String(cap), first: true, committedAt: iso(next()) }), t + 1);
   const com2 = await at(q.commitment({ key: K.officer, allotment: allot, supplier: 'acme b.v.', partySecret: secret, document: Buffer.from('po2 ' + cap), amount: String(cap), previous: com, committedAt: iso(next()) }), t + 1);

@@ -225,7 +225,7 @@ test('a ledger folder any user can write is refused, and a file past the largest
   fs.writeFileSync(path.join(dir, NAME + '.' + (F.SEQ_MAX + 1) + '.json'), 'stray');
   assert.strictEqual(await store.compareAndSwap(NAME, state(NAME, 1, one), state(NAME, 2, forge(base, 2))), true);
   fs.writeFileSync(path.join(dir, NAME + '.9.json'), 'stray');
-  await assert.rejects(store.read(NAME).then((t) => store.compareAndSwap(NAME, t, state(NAME, 3, forge(base, 3)))), (e) => e.code === LEDGER && new RegExp(NAME + '\\.9\\.json').test(e.message));
+  await assert.rejects(store.read(NAME).then((t) => store.compareAndSwap(NAME, t, state(NAME, 3, forge(base, 3)))), (e) => e.code === LEDGER && e.message.includes(NAME + '.9.json'));
 });
 
 test('a ledger folder with an access control list, or under a folder any user can change, is refused', async () => {
