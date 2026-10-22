@@ -38,6 +38,7 @@ export interface AppropriationOptions {
   validUntil: string;
   approvedAt?: string;
   note?: string;
+  clock?: { chainMs: number };
 }
 
 export interface AllotmentOptions {
@@ -51,6 +52,7 @@ export interface AllotmentOptions {
   ledger: string | SeriesLedger | false;
   allottedAt?: string;
   note?: string;
+  clock?: { chainMs: number };
 }
 
 export interface CommitmentOptions {
@@ -70,6 +72,7 @@ export interface CommitmentOptions {
   ledger: string | SeriesLedger | false;
   committedAt?: string;
   note?: string;
+  clock?: { chainMs: number };
 }
 
 export interface ReceiptOptions {
@@ -79,6 +82,7 @@ export interface ReceiptOptions {
   document?: Uint8Array;
   receivedAt?: string;
   note?: string;
+  clock?: { chainMs: number };
 }
 
 export interface InvoiceOptions {
@@ -92,6 +96,7 @@ export interface InvoiceOptions {
   amount: string;
   receivedAt?: string;
   note?: string;
+  clock?: { chainMs: number };
 }
 
 export interface PaymentOptions {
@@ -105,6 +110,7 @@ export interface PaymentOptions {
   ledger: string | SeriesLedger | false;
   paidAt?: string;
   note?: string;
+  clock?: { chainMs: number };
 }
 
 export type KeyStatus = { revoked: false } | { revoked: true; revokedAt: number };
