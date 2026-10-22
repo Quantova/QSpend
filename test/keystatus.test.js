@@ -14,7 +14,7 @@ test('a revoked key backdating an unanchored record never verifies valid', async
   const now = Date.now();
   const app = q.appropriation({ key: stolen, budgetRef: 'B-2026', line: 'L1', period: '2026', currency: 'EUR', amount: '999999999', validUntil: iso(now + 86400e3), approvedAt: iso(now - 2 * 86400e3) });
   const r = await q.verify(app, {
-    type: 'appropriation', ministryKeys: [q.describeKey(stolen)], requireAnchor: false, at: iso(now),
+    type: 'appropriation', network: 'testnet', ministryKeys: [q.describeKey(stolen)], requireAnchor: false, at: iso(now),
     keyStatus: async () => ({ revoked: true, revokedAt: Math.floor((now - 3600e3) / 1000) }),
   });
   assert.strictEqual(r.valid, false);
@@ -33,7 +33,7 @@ test('a revoked key anywhere in the chain of authority makes the dependent recor
     calls += 1;
     return id === ministryId ? { revoked: true, revokedAt: Math.floor((now - 7200e3) / 1000) } : { revoked: false };
   };
-  const common = { ministryKeys: [q.describeKey(ministry)], budgetKeys: [q.describeKey(budget)], requireAnchor: false, at: iso(now), allSupplied: true, keyStatus };
+  const common = { network: 'testnet', ministryKeys: [q.describeKey(ministry)], budgetKeys: [q.describeKey(budget)], requireAnchor: false, at: iso(now), allSupplied: true, keyStatus };
   const r = await q.verify(allot, Object.assign({ type: 'allotment', records: [app] }, common));
   assert.strictEqual(r.status, 'invalid');
   assert.ok(r.checks.some((c) => c.name === 'appropriation key status' && !c.ok));

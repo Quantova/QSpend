@@ -131,7 +131,7 @@ function network(startTime) {
   const chain = makeChain(startTime);
   const clients = [endpoint(chain, 'a'), endpoint(chain, 'b')];
   proofs(true);
-  return { chain, clients, opts: { clients, trustCustomEndpoints: true } };
+  return { chain, clients, opts: { network: 'custom', clients, trustCustomEndpoints: true } };
 }
 
 function stamper(q, net) {

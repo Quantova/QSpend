@@ -23,7 +23,7 @@ test('hostile envelope files make the command line exit non zero quickly and nev
   delete env.anchor;
   const role = F.SPEC.types[type].role;
   const at = new Date(w.now * 1000).toISOString();
-  const base = ['verify', '--type', kebab(type), '--' + kebab(role), w.q.keyId(w.K[role]), '--allow-unanchored', '--at', at];
+  const base = ['verify', '--type', kebab(type), '--network', 'testnet', '--' + kebab(role), w.q.keyId(w.K[role]), '--allow-unanchored', '--at', at];
   const dir = tempDir('qcli-ok');
   const good = path.join(dir, 'honest.json');
   fs.writeFileSync(good, JSON.stringify(env));

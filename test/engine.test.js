@@ -59,8 +59,8 @@ test('party commitments use the canonical identifier', () => {
 test('verification fails closed when the chain time cannot be read', async () => {
   const broken = { base: 'https://down.example', nodeInfo: async () => { throw new Error('refused by the endpoint'); }, block: async () => null, events: async () => ({ events: [] }), transaction: async () => null };
   const other = Object.assign({}, broken, { base: 'https://down2.example' });
-  await assert.rejects(q.verify({}, { type: q.TYPES[0], clients: [broken, other] }), (e) => e.code === F.NAME.toUpperCase() + '_NO_CHAIN_TIME');
-  const r = await q.verify({}, { type: q.TYPES[0], clients: [broken, other], at: new Date().toISOString() });
+  await assert.rejects(q.verify({}, { type: q.TYPES[0], network: 'testnet', clients: [broken, other] }), (e) => e.code === F.NAME.toUpperCase() + '_NO_CHAIN_TIME');
+  const r = await q.verify({}, { type: q.TYPES[0], network: 'testnet', clients: [broken, other], at: new Date().toISOString() });
   assert.strictEqual(r.status, 'invalid');
 });
 
@@ -116,6 +116,7 @@ test('an anchor confirmed only by endpoints chosen by the caller is unproven and
       const o = Object.assign({}, base, { clients: net.clients, at: new Date().toISOString() });
       delete o.trustCustomEndpoints;
       flags.forEach((f, i) => { if (mask & (1 << i)) o[f] = true; });
+      if (!o.trustCustomEndpoints) o.network = 'testnet';
       if (o.trustCustomContract) o.contract = env.anchor.contract;
       const x = await q.verify(env, o);
       assert.notStrictEqual(x.status, 'valid', JSON.stringify(o));
@@ -128,12 +129,13 @@ test('an anchor confirmed only by endpoints chosen by the caller is unproven and
 
 test('endpoints chosen by the caller are consulted only with trustCustomEndpoints', async () => {
   const { env, base } = await anchoredRoot();
-  const o = Object.assign({}, base);
+  const o = Object.assign({}, base, { network: 'testnet' });
   delete o.trustCustomEndpoints;
   await assert.rejects(q.verify(env, o), (e) => e.code === F.NAME.toUpperCase() + '_NO_CHAIN_TIME');
   const r = await q.verify(env, Object.assign({ at: new Date().toISOString() }, o));
   assert.strictEqual(r.status, 'indeterminate');
   assert.ok(r.checks.some((c) => c.name === 'anchor endpoints' && !c.ok && /trustCustomEndpoints/.test(c.detail)));
+  await assert.rejects(q.verify(env, Object.assign({}, o, { network: 'custom' })), /trustCustomEndpoints/);
 });
 
 test('a loopback endpoint is refused unless allowLoopback is set', async () => {
