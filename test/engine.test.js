@@ -19,6 +19,7 @@ const SAME = [
   ['alice', 'Alice', 'ALICE', 'аlice', 'ALΙCE'],
   ['straße', 'STRASSE', 'Strasse'],
   ['INV-1001', 'ІNV‑1001', 'inv 1001', 'INV/1OO1'],
+  ['NID 123456789', 'NID ١٢٣٤٥٦٧٨٩', 'NID ۱۲۳۴۵۶۷۸۹', 'NID १२३४५६७८९', 'NID ১২৩৪৫৬৭৮৯', 'NID 1\u03012\u03013456789', 'NID 12٣٤56789'],
 ];
 
 test('identifiers that differ only in case, separators, width or lookalike letters share one canonical form', () => {
@@ -52,7 +53,7 @@ test('party commitments use the canonical identifier', () => {
   const derived = new Set(SAME[0].map((x) => q.commitParty(x, { secret, scope }).ref));
   assert.strictEqual(derived.size, 1);
   assert.notStrictEqual(q.commitParty('NL-1').ref, q.commitParty('NL-1').ref);
-  assert.notStrictEqual(F.partyRef(salt, 'NL-1'), F.legacyPartyRef(salt, 'NL-1'));
+  assert.strictEqual(F.legacyPartyRef, undefined);
 });
 
 test('verification fails closed when the chain time cannot be read', async () => {
