@@ -26,7 +26,7 @@ test('a revoked key anywhere in the chain of authority makes the dependent recor
   const budget = q.generateKey();
   const now = Date.now();
   const app = q.appropriation({ key: ministry, budgetRef: 'B', line: 'L', period: '2026', currency: 'EUR', amount: '900000000', validUntil: iso(now + 86400e3), approvedAt: iso(now - 3600e3) });
-  const allot = q.allotment({ key: budget, appropriation: app, unit: 'works', amount: '900000000', first: true, allottedAt: iso(now - 1800e3) });
+  const allot = q.allotment({ ledger: false, key: budget, appropriation: app, unit: 'works', amount: '900000000', first: true, allottedAt: iso(now - 1800e3) });
   const ministryId = q.keyId(ministry);
   let calls = 0;
   const keyStatus = async (id) => {

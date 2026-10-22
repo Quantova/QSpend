@@ -26,18 +26,18 @@ async function government() {
     let t = next();
     const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'Act ' + name, line: name, period: '2026', currency: 'EUR', amount: '1000000', validUntil: iso(now + 86400), approvedAt: iso(t) }), t + 1);
     t = next();
-    const allot = await at(q.allotment({ key: K.budget, appropriation: app, unit: name, amount: '1000000', first: true, allottedAt: iso(t) }), t + 1);
+    const allot = await at(q.allotment({ ledger: false, key: K.budget, appropriation: app, unit: name, amount: '1000000', first: true, allottedAt: iso(t) }), t + 1);
     return { app, allot };
   };
   const chainOf = async (l, supplier, number) => {
     let t = next();
-    const com = await at(q.commitment({ key: K.officer, allotment: l.allot, supplier, partySecret: secret, document: Buffer.from('po ' + t), amount: '50000', first: true, committedAt: iso(t) }), t + 1);
+    const com = await at(q.commitment({ ledger: false, key: K.officer, allotment: l.allot, supplier, partySecret: secret, document: Buffer.from('po ' + t), amount: '50000', first: true, committedAt: iso(t) }), t + 1);
     t = next();
     const rec = await at(q.receipt({ key: K.receiver, commitment: com, document: Buffer.from('grn ' + t), receivedAt: iso(t) }), t + 1);
     t = next();
     const inv = await at(q.invoice({ key: K.intake, commitment: com, receipt: rec, invoiceNumber: number, document: Buffer.from('scan ' + t), amount: '20000', receivedAt: iso(t) }), t + 1);
     t = next();
-    const pay = await at(q.payment({ key: K.treasury, commitment: com, invoice: inv, first: true, paidAt: iso(t) }), t + 1);
+    const pay = await at(q.payment({ ledger: false, key: K.treasury, commitment: com, invoice: inv, first: true, paidAt: iso(t) }), t + 1);
     return [com, rec, inv, pay];
   };
   const roles = Object.fromEntries(Object.entries(K).map(([r, k]) => [r + 'Keys', [q.keyId(k)]]));
@@ -58,7 +58,7 @@ test('a supplier keeps one commitment across every appropriation of the governme
   assert.strictEqual(c1.statement.partyScheme, F.PARTY_SCHEME);
   assert.strictEqual(c1.statement.supplierRef, q.commitParty('ACME BV', { secret: g.secret, scope: 'supplier' }).ref);
   assert.notStrictEqual(c1.statement.supplierRef, q.commitParty('ACME BV', { secret: g.secret, scope: q.refOf(roads.app) }).ref);
-  assert.throws(() => q.commitment({ key: g.K.officer, allotment: roads.allot, supplierRef: q.commitParty('ACME BV').ref, document: Buffer.from('po'), amount: '1', first: true }), /partySecret/);
+  assert.throws(() => q.commitment({ ledger: false, key: g.K.officer, allotment: roads.allot, supplierRef: q.commitParty('ACME BV').ref, document: Buffer.from('po'), amount: '1', first: true }), /partySecret/);
   const st = Object.assign({}, c1.statement, { partyScheme: 'random-salt/1' });
   assert.match(F.statementProblem('commitment', st), /secret of the authority/);
 });

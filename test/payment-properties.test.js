@@ -30,15 +30,15 @@ async function books(rng) {
   let t = now - 80000;
   const next = () => (t += 20);
   const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'B', line: 'L', period: '2026', currency: 'EUR', amount: '100000000', validUntil: iso(now + 86400), approvedAt: iso(next()) }), t + 1);
-  const allot = await at(q.allotment({ key: K.budget, appropriation: app, unit: 'u', amount: '100000000', first: true, allottedAt: iso(next()) }), t + 1);
+  const allot = await at(q.allotment({ ledger: false, key: K.budget, appropriation: app, unit: 'u', amount: '100000000', first: true, allottedAt: iso(next()) }), t + 1);
   const secret = Uint8Array.from({ length: 32 }, (_, i) => (1 + int(200) + i) & 255);
   const cap = 1000 + int(90000);
-  const com = await at(q.commitment({ key: K.officer, allotment: allot, supplier: 'ACME BV', partySecret: secret, document: Buffer.from('po ' + cap), amount: String(cap), first: true, committedAt: iso(next()) }), t + 1);
-  const com2 = await at(q.commitment({ key: K.officer, allotment: allot, supplier: 'acme b.v.', partySecret: secret, document: Buffer.from('po2 ' + cap), amount: String(cap), previous: com, committedAt: iso(next()) }), t + 1);
+  const com = await at(q.commitment({ ledger: false, key: K.officer, allotment: allot, supplier: 'ACME BV', partySecret: secret, document: Buffer.from('po ' + cap), amount: String(cap), first: true, committedAt: iso(next()) }), t + 1);
+  const com2 = await at(q.commitment({ ledger: false, key: K.officer, allotment: allot, supplier: 'acme b.v.', partySecret: secret, document: Buffer.from('po2 ' + cap), amount: String(cap), previous: com, committedAt: iso(next()) }), t + 1);
   const rec = await at(q.receipt({ key: K.receiver, commitment: com, document: Buffer.from('grn'), receivedAt: iso(next()) }), t + 1);
   const rec2 = await at(q.receipt({ key: K.receiver, commitment: com2, document: Buffer.from('grn2'), receivedAt: iso(next()) }), t + 1);
   const invoice = (c, r, number, amount, doc) => at(q.invoice({ key: K.intake, commitment: c, receipt: r, invoiceNumber: number, document: Buffer.from(doc || 'scan ' + number + ' ' + t), amount: String(amount), receivedAt: iso(next()) }), t + 1);
-  const pay = (c, inv, previous) => at(q.payment(Object.assign({ key: K.treasury, commitment: c, invoice: inv, paidAt: iso(next()) }, previous ? { previous } : { first: true })), t + 1);
+  const pay = (c, inv, previous) => at(q.payment(Object.assign({ ledger: false, key: K.treasury, commitment: c, invoice: inv, paidAt: iso(next()) }, previous ? { previous } : { first: true })), t + 1);
   const forge = (fields, previous) => {
     const last = previous ? F.parse(previous).statement : null;
     const st = {

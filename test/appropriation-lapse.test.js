@@ -29,20 +29,20 @@ const period = (r) => r.checks.find((c) => c.name === 'appropriation period');
 test('an appropriation states when it lapses and an allotment dated after that is refused at signing', async () => {
   const w = await world();
   assert.throws(() => q.appropriation({ key: w.K.ministry, budgetRef: 'A', line: 'L', period: '2026', currency: 'EUR', amount: '1', validUntil: iso(w.t0), approvedAt: iso(w.t0) }), /lapses only after/);
-  assert.throws(() => q.allotment({ key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 2000) }), /lapsed before this allotment/);
+  assert.throws(() => q.allotment({ ledger: false, key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 2000) }), /lapsed before this allotment/);
 });
 
 test('a record anchored after the appropriation lapsed is invalid, and one without a proven time is indeterminate', async () => {
   const w = await world();
-  const inTime = await w.at(q.allotment({ key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 100) }), w.t0 + 200);
+  const inTime = await w.at(q.allotment({ ledger: false, key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 100) }), w.t0 + 200);
   const ok = await w.check(inTime, 'allotment');
   assert.strictEqual(ok.status, 'valid', JSON.stringify(ok.checks.filter((c) => !c.ok)));
   assert.ok(period(ok).ok);
-  const late = await w.at(q.allotment({ key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 900) }), w.t0 + 1500);
+  const late = await w.at(q.allotment({ ledger: false, key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 900) }), w.t0 + 1500);
   const bad = await w.check(late, 'allotment', { maxAnchorDelay: 3600 });
   assert.strictEqual(bad.status, 'invalid');
   assert.match(period(bad).detail, /anchored after the appropriation lapsed/);
-  const bare = q.allotment({ key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 300) });
+  const bare = q.allotment({ ledger: false, key: w.K.budget, appropriation: w.app, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.t0 + 300) });
   const open = await w.check(bare, 'allotment');
   assert.strictEqual(open.status, 'indeterminate');
   assert.ok(!period(open).ok && period(open).indeterminate);

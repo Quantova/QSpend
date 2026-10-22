@@ -40,7 +40,7 @@ test('with a ledger a second first allotment and an allotment after a stale prev
   const latest = await q.ledgerLatest(dir, 'allotment', q.refOf(all.appropriation));
   assert.strictEqual(latest.statement.seq, 3);
   assert.deepStrictEqual(latest, racers.find((r) => r.status === 'fulfilled').value);
-  const plain = q.allotment({ key: K.budget, appropriation: all.appropriation, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.now - 60) });
+  const plain = q.allotment({ ledger: false, key: K.budget, appropriation: all.appropriation, unit: 'works', amount: '1000', first: true, allottedAt: iso(w.now - 60) });
   assert.strictEqual(typeof plain.then, 'undefined');
 });
 

@@ -16,7 +16,7 @@ async function ledger() {
   for (const r of ['ministry', 'budget', 'officer', 'receiver', 'intake', 'treasury']) K[r] = q.generateKey();
   const t0 = now - 80000;
   const app = await at(q.appropriation({ key: K.ministry, budgetRef: 'B1', line: 'roads', period: '2026', currency: 'EUR', amount: '1000000', validUntil: iso(now + 30 * 86400), approvedAt: iso(t0) }), t0 + 5);
-  const allot = await at(q.allotment({ key: K.budget, appropriation: app, unit: 'works', amount: '1000000', first: true, allottedAt: iso(t0 + 10) }), t0 + 15);
+  const allot = await at(q.allotment({ ledger: false, key: K.budget, appropriation: app, unit: 'works', amount: '1000000', first: true, allottedAt: iso(t0 + 10) }), t0 + 15);
   const secret = Uint8Array.from({ length: 32 }, (_, i) => (4 + i) & 255);
   let n = 0;
   const next = () => {
@@ -25,7 +25,7 @@ async function ledger() {
   };
   const commitment = async (name, previous) => {
     const t = next();
-    return at(q.commitment(Object.assign({ key: K.officer, allotment: allot, supplier: name, partySecret: secret, document: Buffer.from('po ' + t), amount: '50000', committedAt: iso(t) }, previous ? { previous } : { first: true })), t + 1);
+    return at(q.commitment(Object.assign({ ledger: false, key: K.officer, allotment: allot, supplier: name, partySecret: secret, document: Buffer.from('po ' + t), amount: '50000', committedAt: iso(t) }, previous ? { previous } : { first: true })), t + 1);
   };
   const receipt = async (c) => {
     const t = next();
@@ -37,7 +37,7 @@ async function ledger() {
   };
   const payment = async (c, inv, previous) => {
     const t = next();
-    return at(q.payment(Object.assign({ key: K.treasury, commitment: c, invoice: inv, paidAt: iso(t) }, previous ? { previous } : { first: true })), t + 1);
+    return at(q.payment(Object.assign({ ledger: false, key: K.treasury, commitment: c, invoice: inv, paidAt: iso(t) }, previous ? { previous } : { first: true })), t + 1);
   };
   const roles = { ministryKeys: [q.keyId(K.ministry)], budgetKeys: [q.keyId(K.budget)], officerKeys: [q.keyId(K.officer)], receiverKeys: [q.keyId(K.receiver)], intakeKeys: [q.keyId(K.intake)], treasuryKeys: [q.keyId(K.treasury)] };
   const check = (p, records) => {

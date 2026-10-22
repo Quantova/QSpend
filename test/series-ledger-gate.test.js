@@ -54,13 +54,13 @@ function options(f, more) {
 }
 
 function store(answer) {
-  let text = null;
+  const texts = new Map();
   return {
-    async read() {
-      return text;
+    async read(name) {
+      return texts.has(name) ? texts.get(name) : null;
     },
     async compareAndSwap(name, expected, next) {
-      if (answer === true && expected === text) text = next;
+      if (answer === true && expected === (texts.has(name) ? texts.get(name) : null)) texts.set(name, next);
       return answer;
     },
   };

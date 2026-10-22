@@ -12,14 +12,16 @@ const fullwidth = (c) => (c >= '!' && c <= '~' ? String.fromCharCode(c.charCodeA
 function variantOf(rng, text) {
   const pick = (a) => a[Math.floor(rng() * a.length)];
   let out = '';
-  for (const ch of text) {
+  const chars = [...text];
+  for (let i = 0; i < chars.length; i += 1) {
+    const ch = chars[i];
     const r = rng();
     if (/[-\s./_]/.test(ch)) out += pick(SEPARATORS);
     else if (r < 0.3 && LETTERS[ch]) out += pick(LETTERS[ch]);
     else if (r < 0.45) out += fullwidth(ch);
     else if (r < 0.6) out += ch.toLowerCase() === ch ? ch.toUpperCase() : ch.toLowerCase();
     else out += ch;
-    if (rng() < 0.1) out += pick(SEPARATORS);
+    if (rng() < 0.1 && !(/[0-9]/.test(ch) && /[0-9]/.test(chars[i + 1] || ''))) out += pick(SEPARATORS);
   }
   return out;
 }

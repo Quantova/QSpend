@@ -153,8 +153,8 @@ test('a file that changes while the CLI hashes it is refused and nothing is writ
     const iso = (ms) => new Date(ms).toISOString();
     const now = Date.now();
     const app = q.appropriation({ key: q.generateKey(), budgetRef: 'B1', line: 'roads', period: '2026', currency: 'EUR', amount: '1000', validUntil: iso(now + 864e5), approvedAt: iso(now - 9000) });
-    const al = q.allotment({ key: q.generateKey(), appropriation: app, unit: 'works', amount: '500', first: true, allottedAt: iso(now - 8000) });
-    const com = q.commitment({ key: q.generateKey(), allotment: al, supplier: 'ACME BV', partySecret: crypto.getRandomValues(new Uint8Array(32)), document: Buffer.from('po'), amount: '400', first: true, committedAt: iso(now - 7000) });
+    const al = q.allotment({ ledger: false, key: q.generateKey(), appropriation: app, unit: 'works', amount: '500', first: true, allottedAt: iso(now - 8000) });
+    const com = q.commitment({ ledger: false, key: q.generateKey(), allotment: al, supplier: 'ACME BV', partySecret: crypto.getRandomValues(new Uint8Array(32)), document: Buffer.from('po'), amount: '400', first: true, committedAt: iso(now - 7000) });
     const receiver = q.generateKey();
     const commitment = path.join(dir, 'commitment.json');
     fs.writeFileSync(commitment, JSON.stringify(com));
@@ -184,7 +184,7 @@ test('options inherited from a polluted Object.prototype are ignored', async () 
   try {
     assert.strictEqual((await q.verify(env, opts)).status, before);
     const app = q.appropriation({ key: q.generateKey(), budgetRef: 'B1', line: 'roads', period: '2026', currency: 'EUR', amount: '1000', validUntil: iso(now + 864e5), approvedAt: iso(now - 9000) });
-    assert.throws(() => q.allotment({ key: q.generateKey(), appropriation: app, unit: 'works', amount: '5', allottedAt: iso(now - 8000) }), /first set to true/);
+    assert.throws(() => q.allotment({ ledger: false, key: q.generateKey(), appropriation: app, unit: 'works', amount: '5', allottedAt: iso(now - 8000) }), /first set to true/);
   } finally {
     delete Object.prototype.requireAnchor;
     delete Object.prototype.first;

@@ -48,7 +48,7 @@ export interface AllotmentOptions {
   amount: string;
   previous?: Envelope;
   first?: boolean;
-  ledger?: string | SeriesLedger;
+  ledger: string | SeriesLedger | false;
   allottedAt?: string;
   note?: string;
 }
@@ -67,7 +67,7 @@ export interface CommitmentOptions {
   partySecret: Uint8Array;
   previous?: Envelope;
   first?: boolean;
-  ledger?: string | SeriesLedger;
+  ledger: string | SeriesLedger | false;
   committedAt?: string;
   note?: string;
 }
@@ -102,7 +102,7 @@ export interface PaymentOptions {
   amount?: string;
   previous?: Envelope;
   first?: boolean;
-  ledger?: string | SeriesLedger;
+  ledger: string | SeriesLedger | false;
   paidAt?: string;
   note?: string;
 }
@@ -186,13 +186,13 @@ export function describeKey(key: Uint8Array): KeyDescription;
 export function commitParty(identity: string, options?: { salt?: Uint8Array; secret?: Uint8Array; scope?: string }): { salt: Uint8Array; ref: string };
 export function appropriation(options: AppropriationOptions): Envelope;
 export function allotment(options: AllotmentOptions & { ledger: string | SeriesLedger }): Promise<Envelope>;
-export function allotment(options: AllotmentOptions): Envelope;
+export function allotment(options: AllotmentOptions & { ledger: false }): Envelope;
 export function commitment(options: CommitmentOptions & { ledger: string | SeriesLedger }): Promise<Envelope>;
-export function commitment(options: CommitmentOptions): Envelope;
+export function commitment(options: CommitmentOptions & { ledger: false }): Envelope;
 export function receipt(options: ReceiptOptions): Envelope;
 export function invoice(options: InvoiceOptions): Envelope;
 export function payment(options: PaymentOptions & { ledger: string | SeriesLedger }): Promise<Envelope>;
-export function payment(options: PaymentOptions): Envelope;
+export function payment(options: PaymentOptions & { ledger: false }): Envelope;
 export function create(type: RecordType, options: Record<string, unknown>): Envelope | Promise<Envelope>;
 export function folderLedger(folder: string): SeriesLedger;
 export function ledgerLatest(ledger: string | SeriesLedger, type: RecordType, seriesRef: string): Promise<Envelope | null>;
