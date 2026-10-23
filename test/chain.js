@@ -61,7 +61,7 @@ function makeChain(startTime) {
   chain.block(startTime);
   chain.submit = (from, to, argsHex) => {
     const raw = Buffer.from(argsHex, 'hex');
-    const words = raw.subarray(124);
+    const words = raw.subarray(4 + wire.HOST_CONTEXT_BYTES);
     const blk = chain.block(chain.next === null ? undefined : chain.next);
     chain.next = null;
     const tx = bech32m('QTX', crypto.randomBytes(32));
