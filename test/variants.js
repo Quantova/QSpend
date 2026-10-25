@@ -26,4 +26,37 @@ function variantOf(rng, text) {
   return out;
 }
 
-module.exports = { variantOf };
+function atSeam(F, text) {
+  const shape = (ch) => {
+    if (ch === '0' || ch === '1') return 'A';
+    if (/[0-9]/.test(ch)) return 'N';
+    if (!/\p{L}/u.test(ch)) return 'S';
+    const c = F.canonicalIdentifier(ch, 'a', 64);
+    return c === 'o' || c === 'l' ? 'A' : 'L';
+  };
+  const all = [...text.normalize('NFKC')].filter((ch) => shape(ch) !== 'S');
+  const kinds = all.map(shape);
+  for (let i = 0; i < kinds.length;) {
+    if (kinds[i] !== 'A') {
+      i += 1;
+      continue;
+    }
+    let j = i;
+    while (j < kinds.length && kinds[j] === 'A') j += 1;
+    const sides = [i > 0 ? kinds[i - 1] : 'S', j < kinds.length ? kinds[j] : 'S'];
+    const real = all.slice(i, j).some((ch) => /[01]/.test(ch));
+    if (sides.includes('L') && (sides.includes('N') || real)) return true;
+    i = j;
+  }
+  return false;
+}
+
+function variantAwayFromSeam(F, rng, text) {
+  for (let k = 0; k < 64; k += 1) {
+    const v = variantOf(rng, text);
+    if (!atSeam(F, v)) return v;
+  }
+  return text;
+}
+
+module.exports = { variantOf, atSeam, variantAwayFromSeam };
