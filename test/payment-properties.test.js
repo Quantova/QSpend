@@ -8,7 +8,7 @@ const F = require('../lib/format');
 const native = require('../lib/native');
 const { network, stamper, iso, failing } = require('./chain');
 const { mulberry32, iterations } = require('./fuzz');
-const { variantAwayFromSeam } = require('./variants');
+const { variantOf } = require('./variants');
 
 const CODE = F.NAME.toUpperCase() + '_';
 
@@ -106,7 +106,7 @@ test('an invoice is paid at most once, also when its number is written in anothe
     assert.strictEqual(ra.status, 'invalid', 'the same invoice record paid twice verified ' + ra.status);
     counts.repeat += 1;
     for (let k = 0; k < 3; k += 1) {
-      const v = variantAwayFromSeam(F, rng, number);
+      const v = variantOf(rng, number);
       assert.ok(F.sameIdentifier(v, number), JSON.stringify(v) + ' should share the canonical form of ' + number);
       const vinv = await b.invoice(b.com, b.rec, v, 1);
       const p2 = await b.pay(b.com, vinv, p1);
@@ -114,7 +114,7 @@ test('an invoice is paid at most once, also when its number is written in anothe
       assert.strictEqual(r2.status, 'invalid', 'the invoice number ' + JSON.stringify(v) + ' was paid again after ' + number);
       assert.ok(r2.checks.some((c) => c.name === 'invoice paid once' && !c.ok), failing(r2).join('\n'));
       counts.variant += 1;
-      const vinv2 = await b.invoice(b.com2, b.rec2, variantAwayFromSeam(F, rng, number), 1);
+      const vinv2 = await b.invoice(b.com2, b.rec2, variantOf(rng, number), 1);
       const p3 = await b.pay(b.com2, vinv2);
       const r3 = await b.check(p3, records.concat([vinv2]));
       assert.strictEqual(r3.status, 'invalid', 'the invoice number was paid again under another commitment of the same supplier');
