@@ -1,6 +1,6 @@
 {
   "name": "@quantovainc/qspend",
-  "version": "0.7.9",
+  "version": "0.7.10",
   "description": "Post quantum public spending integrity for governments. Seals appropriations, allotments, commitments, receipts, invoices and payments with ML-DSA-65 under FIPS 204 and Quantova time proofs, so a payment without authority, above its commitment or made twice is detected.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -39,7 +39,7 @@
     "linux"
   ],
   "dependencies": {
-    "@quantovainc/qstamp": "0.6.10"
+    "@quantovainc/qstamp": "0.6.13"
   },
   "keywords": [
     "post-quantum",
